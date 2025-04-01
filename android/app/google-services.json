@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "803754240293",
+    "project_id": "av1155-bridgechat",
+    "storage_bucket": "av1155-bridgechat.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:803754240293:android:ef449b984c85acaca592cc",
+        "android_client_info": {
+          "package_name": "com.example.bridgechat"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB3PGxPQBu0MnEyFVb0yeT93_Zfmu511F0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
