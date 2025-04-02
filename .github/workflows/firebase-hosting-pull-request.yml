@@ -26,6 +26,10 @@ jobs:
             - name: Install dependencies
               run: flutter pub get
 
+            - name: Inject secrets.dart
+              run: |
+                  echo "${{ secrets.SECRETS_DART_CONTENT }}" > lib/secrets.dart
+
             - name: Build Flutter Web
               run: flutter build web
 
