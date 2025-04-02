@@ -8,6 +8,7 @@
     - [Getting Started](#getting-started)
         - [Prerequisites](#prerequisites)
         - [Installation](#installation)
+    - [🔐 Local Secrets Setup](#🔐-local-secrets-setup)
     - [Documentation](#documentation)
     - [Contributing](#contributing)
     - [License](#license)
@@ -44,7 +45,7 @@ BridgeChat is a real-time chat application designed to break language barriers b
 1. **Clone the repository:**
 
     ```bash
-    git clone https://github.com/yourusername/BridgeChat.git
+    git clone https://github.com/av1155/bridgechat.git
     ```
 
 2. **Navigate to the project directory:**
