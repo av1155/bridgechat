@@ -4,13 +4,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'chat_screen.dart';
 
 class RecentConversationsScreen extends StatelessWidget {
-  RecentConversationsScreen({Key? key}) : super(key: key);
+  RecentConversationsScreen({super.key});
 
   final User currentUser = FirebaseAuth.instance.currentUser!;
 
   Stream<QuerySnapshot> getRecentConversations() {
-    // Print the current user's UID for debugging.
-    print("Current User UID: ${currentUser.uid}");
     // Return conversations where the current user is a participant.
     return FirebaseFirestore.instance
         .collection('conversations')
@@ -24,7 +22,6 @@ class RecentConversationsScreen extends StatelessWidget {
     try {
       return participants.firstWhere((id) => id != currentUser.uid);
     } catch (e) {
-      print("Error determining other user: $e");
       return "Unknown";
     }
   }
@@ -56,9 +53,6 @@ class RecentConversationsScreen extends StatelessWidget {
             return const Center(child: Text('No data available.'));
           }
           final convos = snapshot.data!.docs;
-          print(
-            "Found ${convos.length} conversations for user ${currentUser.uid}",
-          );
           if (convos.isEmpty) {
             return const Center(child: Text('No conversations yet.'));
           }
@@ -80,19 +74,50 @@ class RecentConversationsScreen extends StatelessWidget {
                   if (userSnapshot.hasData && userSnapshot.data!.exists) {
                     displayName = userSnapshot.data!.get('username');
                   }
-                  return ListTile(
-                    title: Text('Conversation with $displayName'),
-                    subtitle: Text(data['lastMessage'] ?? ''),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder:
-                              (context) =>
-                                  ChatScreen(conversationId: convos[index].id),
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12.0,
+                      vertical: 6.0,
+                    ),
+                    child: Card(
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.all(16.0),
+                        leading: CircleAvatar(
+                          backgroundColor:
+                              Theme.of(context).colorScheme.secondary,
+                          child: Text(
+                            displayName.isNotEmpty
+                                ? displayName.substring(0, 1).toUpperCase()
+                                : '?',
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(color: Colors.white),
+                          ),
                         ),
-                      );
-                    },
+                        title: Text(
+                          'Conversation with $displayName',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        subtitle: Text(
+                          data['lastMessage'] ?? '',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder:
+                                  (context) => ChatScreen(
+                                    conversationId: convos[index].id,
+                                  ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
                   );
                 },
               );

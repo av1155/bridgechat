@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'auth_service.dart';
-import 'conversation_selection.dart';
 
 class AuthScreen extends StatefulWidget {
-  const AuthScreen({Key? key}) : super(key: key);
+  const AuthScreen({super.key});
 
   @override
-  _AuthScreenState createState() => _AuthScreenState();
+  State<AuthScreen> createState() => _AuthScreenState();
 }
 
 class _AuthScreenState extends State<AuthScreen> {
@@ -14,7 +13,7 @@ class _AuthScreenState extends State<AuthScreen> {
   final _formKey = GlobalKey<FormState>();
   String _email = '';
   String _password = '';
-  String _username = ''; // New variable for username.
+  String _username = ''; // Variable for username.
   bool _isSignUp = false;
 
   void _toggleForm() {
@@ -28,15 +27,14 @@ class _AuthScreenState extends State<AuthScreen> {
       _formKey.currentState!.save();
       try {
         if (_isSignUp) {
-          // Pass _username along with _email and _password.
           await _authService.signUp(_email, _password, _username);
         } else {
           await _authService.signIn(_email, _password);
         }
-        // Navigate to conversation selection after auth.
+        if (!mounted) return;
         Navigator.pushReplacementNamed(context, '/recentConversations');
       } catch (e) {
-        // Handle errors.
+        if (!mounted) return;
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Error: $e')));
@@ -48,40 +46,58 @@ class _AuthScreenState extends State<AuthScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(_isSignUp ? 'Sign Up' : 'Sign In')),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
           child: Column(
             children: [
-              if (_isSignUp) // Only show username field for sign-up.
-                TextFormField(
-                  decoration: const InputDecoration(labelText: 'Username'),
-                  onSaved: (value) => _username = value!.trim(),
+              if (_isSignUp)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: TextFormField(
+                    decoration: const InputDecoration(
+                      labelText: 'Username',
+                      prefixIcon: Icon(Icons.person),
+                    ),
+                    onSaved: (value) => _username = value!.trim(),
+                    validator:
+                        (value) =>
+                            value == null || value.isEmpty
+                                ? 'Enter a username'
+                                : null,
+                  ),
+                ),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: TextFormField(
+                  decoration: const InputDecoration(
+                    labelText: 'Email',
+                    prefixIcon: Icon(Icons.email),
+                  ),
+                  onSaved: (value) => _email = value!.trim(),
                   validator:
                       (value) =>
                           value == null || value.isEmpty
-                              ? 'Enter a username'
+                              ? 'Enter an email'
                               : null,
                 ),
-              TextFormField(
-                decoration: const InputDecoration(labelText: 'Email'),
-                onSaved: (value) => _email = value!.trim(),
-                validator:
-                    (value) =>
-                        value == null || value.isEmpty
-                            ? 'Enter an email'
-                            : null,
               ),
-              TextFormField(
-                decoration: const InputDecoration(labelText: 'Password'),
-                obscureText: true,
-                onSaved: (value) => _password = value!.trim(),
-                validator:
-                    (value) =>
-                        value != null && value.length < 6
-                            ? 'Password too short'
-                            : null,
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: TextFormField(
+                  decoration: const InputDecoration(
+                    labelText: 'Password',
+                    prefixIcon: Icon(Icons.lock),
+                  ),
+                  obscureText: true,
+                  onSaved: (value) => _password = value!.trim(),
+                  validator:
+                      (value) =>
+                          value != null && value.length < 6
+                              ? 'Password too short'
+                              : null,
+                ),
               ),
               const SizedBox(height: 20),
               ElevatedButton(

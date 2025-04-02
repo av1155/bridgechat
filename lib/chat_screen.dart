@@ -1,4 +1,3 @@
-// lib/chat_screen.dart
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'chat_service.dart';
@@ -7,23 +6,25 @@ import 'message_bubble.dart';
 
 class ChatScreen extends StatefulWidget {
   final String conversationId;
-  const ChatScreen({Key? key, required this.conversationId}) : super(key: key);
+  const ChatScreen({super.key, required this.conversationId});
 
   @override
-  _ChatScreenState createState() => _ChatScreenState();
+  ChatScreenState createState() => ChatScreenState();
 }
 
-class _ChatScreenState extends State<ChatScreen> {
+class ChatScreenState extends State<ChatScreen> {
   final ChatService _chatService = ChatService();
   final TextEditingController _messageController = TextEditingController();
   final User? _currentUser = FirebaseAuth.instance.currentUser;
 
   Future<void> _sendMessage() async {
+    // Assign a non-nullable local variable after checking.
     if (_messageController.text.trim().isNotEmpty && _currentUser != null) {
+      final user = _currentUser; // user is non-null here.
       await _chatService.sendMessage(
         widget.conversationId,
         _messageController.text.trim(),
-        _currentUser!.uid,
+        user.uid,
       );
       _messageController.clear();
     }
@@ -31,6 +32,14 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_currentUser == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Chat')),
+        body: const Center(child: Text('User not authenticated.')),
+      );
+    }
+    // Since _currentUser is non-null here, we can safely assign it.
+    final user = _currentUser;
     return Scaffold(
       appBar: AppBar(title: const Text('Chat')),
       body: Column(
@@ -55,7 +64,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     return MessageBubble(
                       text: text,
                       senderId: senderId,
-                      currentUserId: _currentUser!.uid,
+                      currentUserId: user.uid,
                     );
                   },
                 );

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 class MessageBubble extends StatelessWidget {
   final String text;
@@ -8,11 +7,11 @@ class MessageBubble extends StatelessWidget {
   final String currentUserId;
 
   const MessageBubble({
-    Key? key,
+    super.key,
     required this.text,
     required this.senderId,
     required this.currentUserId,
-  }) : super(key: key);
+  });
 
   Future<String> _getSenderUsername() async {
     final doc =
@@ -33,11 +32,19 @@ class MessageBubble extends StatelessWidget {
         return Align(
           alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
           child: Container(
-            margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
-            padding: const EdgeInsets.all(12.0),
+            margin: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 12.0),
+            padding: const EdgeInsets.all(16.0),
             decoration: BoxDecoration(
-              color: isMe ? Colors.blue : Colors.grey[300],
-              borderRadius: BorderRadius.circular(8.0),
+              color: isMe ? const Color(0xFF4A90E2) : Colors.grey.shade200,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: const [
+                // Instead of using withOpacity(0.05), we use a constant color with an alpha value of 0x0D (≈5% opacity).
+                BoxShadow(
+                  color: Color(0x0D000000),
+                  blurRadius: 4,
+                  offset: Offset(0, 2),
+                ),
+              ],
             ),
             child: Column(
               crossAxisAlignment:
@@ -45,13 +52,16 @@ class MessageBubble extends StatelessWidget {
               children: [
                 Text(
                   text,
-                  style: TextStyle(color: isMe ? Colors.white : Colors.black),
+                  style: TextStyle(
+                    color: isMe ? Colors.white : Colors.black87,
+                    fontSize: 16,
+                  ),
                 ),
-                const SizedBox(height: 4.0),
+                const SizedBox(height: 6),
                 Text(
                   senderName,
                   style: TextStyle(
-                    fontSize: 10.0,
+                    fontSize: 12,
                     color: isMe ? Colors.white70 : Colors.black54,
                   ),
                 ),
