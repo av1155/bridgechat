@@ -1,0 +1,8 @@
+{
+  "projects": {
+    "bridgechat": "av1155-bridgechat",
+    "default": "av1155-bridgechat"
+  },
+  "targets": {},
+  "etags": {}
+}
