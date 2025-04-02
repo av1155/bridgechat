@@ -34,10 +34,7 @@ class _AuthScreenState extends State<AuthScreen> {
           await _authService.signIn(_email, _password);
         }
         // Navigate to conversation selection after auth.
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => ConversationSelection()),
-        );
+        Navigator.pushReplacementNamed(context, '/recentConversations');
       } catch (e) {
         // Handle errors.
         ScaffoldMessenger.of(

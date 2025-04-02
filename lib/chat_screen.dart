@@ -1,7 +1,9 @@
+// lib/chat_screen.dart
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'chat_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'message_bubble.dart';
 
 class ChatScreen extends StatefulWidget {
   final String conversationId;
@@ -50,9 +52,10 @@ class _ChatScreenState extends State<ChatScreen> {
                     final data = messages[index].data() as Map<String, dynamic>;
                     final text = data['text'] ?? '';
                     final senderId = data['senderId'] ?? 'Unknown';
-                    return ListTile(
-                      title: Text(text),
-                      subtitle: Text('Sent by: $senderId'),
+                    return MessageBubble(
+                      text: text,
+                      senderId: senderId,
+                      currentUserId: _currentUser!.uid,
                     );
                   },
                 );

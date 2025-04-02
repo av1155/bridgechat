@@ -12,6 +12,16 @@ class AuthService {
     String password,
     String username,
   ) async {
+    // Check if the username is already taken.
+    final QuerySnapshot result =
+        await _firestore
+            .collection('users')
+            .where('username', isEqualTo: username)
+            .get();
+    if (result.docs.isNotEmpty) {
+      throw Exception('Username already taken.');
+    }
+
     try {
       // Create the user with Firebase Auth.
       UserCredential result = await _auth.createUserWithEmailAndPassword(
