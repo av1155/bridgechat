@@ -13,7 +13,7 @@
     - [License](#license)
     - [Changelog](#changelog)
     - [Contact](#contact)
-          <!--toc:end-->
+        <!--toc:end-->
 
 BridgeChat is a real-time chat application designed to break language barriers by integrating real-time translation. It offers seamless communication for users across different languages and platforms—starting with a web interface and expanding to mobile and desktop.
 
@@ -67,6 +67,14 @@ BridgeChat is a real-time chat application designed to break language barriers b
     ```bash
     flutter run
     ```
+
+## 🔐 Local Secrets Setup
+
+To run locally:
+
+1. Copy `lib/secrets_sample.dart` to `lib/secrets.dart`
+2. Fill in your actual translation API URL
+3. Make sure `lib/secrets.dart` is not committed (already in `.gitignore`)
 
 ## Documentation
 
