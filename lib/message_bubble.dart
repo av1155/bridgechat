@@ -27,107 +27,87 @@ class MessageBubble extends StatefulWidget {
 }
 
 class _MessageBubbleState extends State<MessageBubble> {
-  late bool _showOriginal; // We'll set this in initState based on who sent it
+  late bool _showOriginal;
 
   @override
   void initState() {
     super.initState();
-    final bool isMe = (widget.senderId == widget.currentUserId);
-    // If I'm the sender, default = original text
-    // If I'm the recipient, default = translated text
-    _showOriginal = isMe;
+    _showOriginal = widget.senderId == widget.currentUserId;
   }
 
   @override
   Widget build(BuildContext context) {
-    final bool isMe = (widget.senderId == widget.currentUserId);
+    final bool isMe = widget.senderId == widget.currentUserId;
     final timeString = DateFormat('h:mm a').format(widget.timestamp);
-
-    // If the text is identical, toggling is pointless
     final bool hasDifferentTranslation =
         widget.originalText != widget.translatedText &&
         widget.translatedText.isNotEmpty;
-
-    final String displayText =
+    final displayText =
         _showOriginal ? widget.originalText : widget.translatedText;
 
-    // Bubble alignment: right if isMe, left if not
-    final alignment = isMe ? Alignment.centerRight : Alignment.centerLeft;
-    final crossAxis = isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start;
-    final bubbleColor = isMe ? const Color(0xFF4A90E2) : Colors.grey.shade200;
+    // 🎨 Playful, modern colors
+    final bubbleColor =
+        isMe ? const Color(0xFF6A82FB) : const Color(0xFFF1F1F1);
     final textColor = isMe ? Colors.white : Colors.black87;
+    final secondaryTextColor = isMe ? Colors.white70 : Colors.black45;
+    final linkColor = isMe ? Colors.white : const Color(0xFF6A82FB);
 
     return Align(
-      alignment: alignment,
+      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: ConstrainedBox(
         constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.7,
+          maxWidth: MediaQuery.of(context).size.width * 0.75,
         ),
         child: Container(
-          margin: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 12.0),
-          padding: const EdgeInsets.all(12.0),
+          margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+          padding: const EdgeInsets.all(14.0),
           decoration: BoxDecoration(
             color: bubbleColor,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(20),
             boxShadow: const [
               BoxShadow(
-                color: Color(0x0D000000),
-                blurRadius: 4,
+                color: Colors.black26,
+                blurRadius: 6,
                 offset: Offset(0, 2),
               ),
             ],
           ),
           child: Column(
-            crossAxisAlignment: crossAxis,
+            crossAxisAlignment:
+                isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
             children: [
               Text(
                 displayText,
-                style: TextStyle(color: textColor, fontSize: 16),
-                textAlign: isMe ? TextAlign.right : TextAlign.left,
+                style: TextStyle(color: textColor, fontSize: 16, height: 1.4),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 6),
               Text(
                 timeString,
-                style: TextStyle(
-                  color: isMe ? Colors.white70 : Colors.black54,
-                  fontSize: 12,
-                ),
-                textAlign: isMe ? TextAlign.right : TextAlign.left,
+                style: TextStyle(color: secondaryTextColor, fontSize: 12),
               ),
-
               if (hasDifferentTranslation &&
                   widget.sourceLang != null &&
                   widget.targetLang != null)
                 Padding(
-                  padding: const EdgeInsets.only(top: 2),
+                  padding: const EdgeInsets.only(top: 4),
                   child: Text(
                     'Translated from ${_getLangName(widget.sourceLang)} to ${_getLangName(widget.targetLang)}',
-
                     style: TextStyle(
                       fontSize: 10,
                       fontStyle: FontStyle.italic,
-                      color: isMe ? Colors.white70 : Colors.black54,
+                      color: secondaryTextColor,
                     ),
-                    textAlign: isMe ? TextAlign.right : TextAlign.left,
                   ),
                 ),
-
-              // Show a toggle only if there's a different translation
               if (hasDifferentTranslation)
-                Align(
-                  alignment:
-                      isMe ? Alignment.centerRight : Alignment.centerLeft,
-                  child: TextButton(
-                    onPressed: () {
-                      setState(() => _showOriginal = !_showOriginal);
-                    },
-                    child: Text(
-                      _showOriginal ? 'View Translated' : 'View Original',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: isMe ? Colors.white70 : Colors.blueAccent,
-                      ),
-                    ),
+                TextButton(
+                  onPressed: () {
+                    setState(() => _showOriginal = !_showOriginal);
+                  },
+                  style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                  child: Text(
+                    _showOriginal ? 'View Translated' : 'View Original',
+                    style: TextStyle(fontSize: 12, color: linkColor),
                   ),
                 ),
             ],
