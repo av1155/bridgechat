@@ -64,10 +64,11 @@ class ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   Future<void> _fetchParticipantsAndLanguages() async {
     final myUid = _currentUser.uid;
-    final convDoc = await FirebaseFirestore.instance
-        .collection('conversations')
-        .doc(widget.conversationId)
-        .get();
+    final convDoc =
+        await FirebaseFirestore.instance
+            .collection('conversations')
+            .doc(widget.conversationId)
+            .get();
     if (!convDoc.exists) return;
 
     final data = convDoc.data();
@@ -84,10 +85,11 @@ class ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (_otherUserId == null) return;
 
     // Other user's language
-    final otherDoc = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(_otherUserId!)
-        .get();
+    final otherDoc =
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(_otherUserId!)
+            .get();
     if (otherDoc.exists) {
       _otherUserLanguage =
           (otherDoc.data()?['preferredLanguage'] ?? 'English') as String;
@@ -107,10 +109,11 @@ class ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _messageController.clear();
 
     final myUid = _currentUser.uid;
-    final convDoc = await FirebaseFirestore.instance
-        .collection('conversations')
-        .doc(widget.conversationId)
-        .get();
+    final convDoc =
+        await FirebaseFirestore.instance
+            .collection('conversations')
+            .doc(widget.conversationId)
+            .get();
 
     final data = convDoc.data();
     if (data == null) return;
@@ -147,20 +150,20 @@ class ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         .doc(widget.conversationId)
         .collection('messages')
         .add({
-      'senderId': myUid,
-      'originalText': text,
-      'translations': translations,
-      'timestamp': FieldValue.serverTimestamp(),
-      'sourceLang': sourceLang,
-    });
+          'senderId': myUid,
+          'originalText': text,
+          'translations': translations,
+          'timestamp': FieldValue.serverTimestamp(),
+          'sourceLang': sourceLang,
+        });
 
     await FirebaseFirestore.instance
         .collection('conversations')
         .doc(widget.conversationId)
         .update({
-      'lastMessage': text,
-      'timestamp': FieldValue.serverTimestamp(),
-    });
+          'lastMessage': text,
+          'timestamp': FieldValue.serverTimestamp(),
+        });
   }
 
   Future<String> _translateText(
@@ -221,15 +224,16 @@ class ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           ),
         ),
         child: SafeArea(
-          child: _isInitialLoad
-              ? const Center(child: CircularProgressIndicator())
-              : Column(
-                  children: [
-                    _buildHeader(),
-                    Expanded(child: _buildMessagesStream()),
-                    _buildMessageInput(),
-                  ],
-                ),
+          child:
+              _isInitialLoad
+                  ? const Center(child: CircularProgressIndicator())
+                  : Column(
+                    children: [
+                      _buildHeader(),
+                      Expanded(child: _buildMessagesStream()),
+                      _buildMessageInput(),
+                    ],
+                  ),
         ),
       ),
     );
@@ -258,10 +262,7 @@ class ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           Expanded(
             child: Text(
               widget.otherUserName,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               overflow: TextOverflow.ellipsis,
             ),
           ),
@@ -272,9 +273,10 @@ class ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => GroupSettingsScreen(
-                      conversationId: widget.conversationId,
-                    ),
+                    builder:
+                        (_) => GroupSettingsScreen(
+                          conversationId: widget.conversationId,
+                        ),
                   ),
                 );
               },
@@ -286,12 +288,13 @@ class ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   Widget _buildMessagesStream() {
     return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('conversations')
-          .doc(widget.conversationId)
-          .collection('messages')
-          .orderBy('timestamp', descending: false)
-          .snapshots(),
+      stream:
+          FirebaseFirestore.instance
+              .collection('conversations')
+              .doc(widget.conversationId)
+              .collection('messages')
+              .orderBy('timestamp', descending: false)
+              .snapshots(),
       builder: (ctx, snap) {
         if (snap.connectionState == ConnectionState.waiting) {
           return const SizedBox();
@@ -302,78 +305,90 @@ class ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         }
 
         // Build local list
-        _msgList = docs.map((doc) {
-          final data = doc.data() as Map<String, dynamic>;
-          final senderId = data['senderId'] ?? '';
-          final originalText = data['originalText'] ?? '';
-          final ts = data['timestamp'] as Timestamp?;
-          final dt = ts?.toDate() ?? DateTime.now();
-          final sourceLang = data['sourceLang'] ?? 'en';
-          final translations = data['translations'] as Map<String, dynamic>? ?? {};
+        _msgList =
+            docs.map((doc) {
+              final data = doc.data() as Map<String, dynamic>;
+              final senderId = data['senderId'] ?? '';
+              final originalText = data['originalText'] ?? '';
+              final ts = data['timestamp'] as Timestamp?;
+              final dt = ts?.toDate() ?? DateTime.now();
+              final sourceLang = data['sourceLang'] ?? 'en';
+              final translations =
+                  data['translations'] as Map<String, dynamic>? ?? {};
 
-          final isMe = senderId == _currentUser.uid;
-          final translatedText = isMe
-              ? (_isGroupChat ? originalText : (translations[_otherUserId] ?? originalText))
-              : (translations[_currentUser.uid] ?? originalText);
+              final isMe = senderId == _currentUser.uid;
+              final translatedText =
+                  isMe
+                      ? (_isGroupChat
+                          ? originalText
+                          : (translations[_otherUserId] ?? originalText))
+                      : (translations[_currentUser.uid] ?? originalText);
 
-          final targetLang = (isMe && _isGroupChat)
-              ? null
-              : _langToIso(isMe ? _otherUserLanguage : _myLanguage);
+              final targetLang =
+                  (isMe && _isGroupChat)
+                      ? null
+                      : _langToIso(isMe ? _otherUserLanguage : _myLanguage);
 
-          return {
-            'senderId': senderId,
-            'originalText': originalText,
-            'translatedText': translatedText,
-            'timestamp': dt,
-            'sourceLang': sourceLang,
-            'targetLang': targetLang,
-          };
-        }).toList();
+              return {
+                'senderId': senderId,
+                'originalText': originalText,
+                'translatedText': translatedText,
+                'timestamp': dt,
+                'sourceLang': sourceLang,
+                'targetLang': targetLang,
+              };
+            }).toList();
 
         // Scroll to bottom on new messages
         WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
 
-        return ListView.builder(
-          controller: _scrollController,
-          physics: const AlwaysScrollableScrollPhysics(),
-          itemCount: _msgList.length,
-          itemBuilder: (ctx, index) {
-            final msg = _msgList[index];
-            final dt = msg['timestamp'] as DateTime;
+        return Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: ListView.builder(
+              controller: _scrollController,
+              physics: const AlwaysScrollableScrollPhysics(),
+              itemCount: _msgList.length,
+              itemBuilder: (ctx, index) {
+                final msg = _msgList[index];
+                final dt = msg['timestamp'] as DateTime;
 
-            // Show day marker if new day
-            Widget? dayMarker;
-            if (index == 0) {
-              dayMarker = _buildDayMarker(dt);
-            } else {
-              final prevDt = _msgList[index - 1]['timestamp'] as DateTime;
-              final isNewDay = dt.year != prevDt.year ||
-                  dt.month != prevDt.month ||
-                  dt.day != prevDt.day;
-              if (isNewDay) {
-                dayMarker = _buildDayMarker(dt);
-              }
-            }
+                // Show day marker if new day
+                Widget? dayMarker;
+                if (index == 0) {
+                  dayMarker = _buildDayMarker(dt);
+                } else {
+                  final prevDt = _msgList[index - 1]['timestamp'] as DateTime;
+                  final isNewDay =
+                      dt.year != prevDt.year ||
+                      dt.month != prevDt.month ||
+                      dt.day != prevDt.day;
+                  if (isNewDay) {
+                    dayMarker = _buildDayMarker(dt);
+                  }
+                }
 
-            final bubble = MessageBubble(
-              senderId: msg['senderId'] as String,
-              currentUserId: _currentUser.uid,
-              originalText: msg['originalText'] as String,
-              translatedText: msg['translatedText'] as String,
-              timestamp: dt,
-              sourceLang: msg['sourceLang'] as String?,
-              targetLang: msg['targetLang'] as String?,
-            );
+                final bubble = MessageBubble(
+                  senderId: msg['senderId'] as String,
+                  currentUserId: _currentUser.uid,
+                  originalText: msg['originalText'] as String,
+                  translatedText: msg['translatedText'] as String,
+                  timestamp: dt,
+                  sourceLang: msg['sourceLang'] as String?,
+                  targetLang: msg['targetLang'] as String?,
+                );
 
-            if (dayMarker != null) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [dayMarker, bubble],
-              );
-            } else {
-              return bubble;
-            }
-          },
+                if (dayMarker != null) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [dayMarker, bubble],
+                  );
+                } else {
+                  return bubble;
+                }
+              },
+            ),
+          ),
         );
       },
     );
@@ -424,10 +439,7 @@ class ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               onTap: _scrollToBottom,
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.send),
-            onPressed: _sendMessage,
-          ),
+          IconButton(icon: const Icon(Icons.send), onPressed: _sendMessage),
         ],
       ),
     );
