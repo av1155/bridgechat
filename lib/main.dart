@@ -55,12 +55,16 @@ class MyApp extends StatelessWidget {
           bodyMedium: TextStyle(fontFamily: 'OpenSans', fontSize: 16),
         ),
         inputDecorationTheme: InputDecorationTheme(
-          border: const OutlineInputBorder(
+          border: OutlineInputBorder(
             borderRadius: BorderRadius.all(Radius.circular(12)),
           ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(12)),
+            borderSide: BorderSide(color: Colors.black54),
+          ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: const BorderRadius.all(Radius.circular(12)),
-            borderSide: BorderSide(color: const Color(0xFF4A90E2), width: 2),
+            borderRadius: BorderRadius.all(Radius.circular(12)),
+            borderSide: BorderSide(color: Color(0xFF4A90E2), width: 2),
           ),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
