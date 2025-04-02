@@ -123,6 +123,7 @@ class RecentConversationsScreen extends StatelessWidget {
                                   builder:
                                       (context) => ChatScreen(
                                         conversationId: convos[index].id,
+                                        otherUserName: displayName,
                                       ),
                                 ),
                               );

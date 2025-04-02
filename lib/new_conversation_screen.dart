@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'chat_service.dart';
 import 'chat_screen.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 class NewConversationScreen extends StatefulWidget {
   const NewConversationScreen({Key? key}) : super(key: key);
@@ -18,29 +18,38 @@ class _NewConversationScreenState extends State<NewConversationScreen> {
   final User currentUser = FirebaseAuth.instance.currentUser!;
 
   Future<QuerySnapshot> _searchUsers(String query) {
-    // For simplicity, searches 'users' collection by username
+    // For simplicity, this example searches the 'users' collection by username
     return _firestore
         .collection('users')
         .where('username', isEqualTo: query)
         .get();
   }
 
-  void _startConversationWithUser(String otherUserId) async {
+  // We pass both the userId and the userName so ChatScreen can display their name.
+  void _startConversationWithUser(
+    String otherUserId,
+    String otherUserName,
+  ) async {
+    // Create or get the conversation ID.
     String conversationId = await _chatService.createOrGetConversation(
       currentUser.uid,
       otherUserId,
     );
+    // Now navigate to ChatScreen and provide the user’s name.
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (context) => ChatScreen(conversationId: conversationId),
+        builder:
+            (context) => ChatScreen(
+              conversationId: conversationId,
+              otherUserName: otherUserName, // <--- Provide it here
+            ),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    // Responsive logic
     final Size screenSize = MediaQuery.of(context).size;
     final bool isMobile = screenSize.width < 600;
 
@@ -71,10 +80,16 @@ class _NewConversationScreenState extends State<NewConversationScreen> {
                   onPressed: () async {
                     final query = _searchController.text.trim();
                     if (query.isNotEmpty) {
-                      final snapshot = await _searchUsers(query);
+                      QuerySnapshot snapshot = await _searchUsers(query);
                       if (snapshot.docs.isNotEmpty) {
-                        final otherUserId = snapshot.docs.first.id;
-                        _startConversationWithUser(otherUserId);
+                        // 1) Take the first matching user doc.
+                        final userDoc = snapshot.docs.first;
+                        final otherUserId = userDoc.id;
+                        final userData = userDoc.data() as Map<String, dynamic>;
+                        // 2) Extract 'username' from userData
+                        final otherUserName = userData['username'] ?? 'No Name';
+                        // 3) Start the conversation with BOTH userId and userName
+                        _startConversationWithUser(otherUserId, otherUserName);
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('User not found')),

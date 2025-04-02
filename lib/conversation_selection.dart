@@ -18,6 +18,7 @@ class ConversationSelection extends StatelessWidget {
   Future<void> _startConversation(
     BuildContext context,
     String otherUserId,
+    String otherUserName, // <-- NEW parameter here
   ) async {
     String conversationId = await _chatService.createOrGetConversation(
       currentUser.uid,
@@ -26,7 +27,11 @@ class ConversationSelection extends StatelessWidget {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ChatScreen(conversationId: conversationId),
+        builder:
+            (context) => ChatScreen(
+              conversationId: conversationId,
+              otherUserName: otherUserName, // pass the name along
+            ),
       ),
     );
   }
@@ -70,7 +75,8 @@ class ConversationSelection extends StatelessWidget {
                       username,
                       style: TextStyle(fontSize: isMobile ? 14 : 16),
                     ),
-                    onTap: () => _startConversation(context, userId),
+                    // Pass BOTH the userId and the username
+                    onTap: () => _startConversation(context, userId, username),
                   );
                 },
               );
