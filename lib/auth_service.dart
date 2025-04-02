@@ -11,32 +11,35 @@ class AuthService {
     String email,
     String password,
     String username,
+    String preferredLanguage,
   ) async {
-    // Check if the username is already taken.
+    // Check if the username is already taken
     final QuerySnapshot result =
         await _firestore
             .collection('users')
             .where('username', isEqualTo: username)
             .get();
+
     if (result.docs.isNotEmpty) {
       throw Exception('Username already taken.');
     }
 
     try {
       // Create the user with Firebase Auth.
-      UserCredential result = await _auth.createUserWithEmailAndPassword(
+      UserCredential cred = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-      // Save the user profile in Firestore.
-      await _firestore.collection('users').doc(result.user!.uid).set({
+      // Save the user profile in Firestore
+      await _firestore.collection('users').doc(cred.user!.uid).set({
         'email': email,
         'username': username,
+        'preferredLanguage': preferredLanguage,
         'createdAt': FieldValue.serverTimestamp(),
       });
 
-      return result;
+      return cred;
     } catch (e) {
       rethrow;
     }

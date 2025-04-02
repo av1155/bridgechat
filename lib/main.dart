@@ -6,6 +6,7 @@ import 'auth_screen.dart';
 import 'recent_conversations_screen.dart';
 import 'new_conversation_screen.dart';
 import 'home_screen.dart';
+import 'settings_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,6 +37,7 @@ class MyApp extends StatelessWidget {
         },
         '/recentConversations': (context) => RecentConversationsScreen(),
         '/newConversation': (context) => const NewConversationScreen(),
+        '/settings': (context) => const SettingsScreen(),
       },
       theme: ThemeData(
         brightness: Brightness.light,

@@ -64,4 +64,46 @@ class ChatService {
         .orderBy('timestamp', descending: false)
         .snapshots();
   }
+
+  // Delete a conversation only for a specific user.
+  // - Removes all messages from 'senderId' == userId
+  // - Removes that user from the participants array
+  Future<void> deleteConversationForUser(
+    String conversationId,
+    String userId,
+  ) async {
+    final conversationRef = _firestore
+        .collection('conversations')
+        .doc(conversationId);
+    final messagesRef = conversationRef.collection('messages');
+
+    // Query all messages from this user
+    final query = await messagesRef.where('senderId', isEqualTo: userId).get();
+
+    // Use a batch to delete multiple docs atomically
+    WriteBatch batch = _firestore.batch();
+
+    // 1) Delete the user's messages
+    for (var doc in query.docs) {
+      batch.delete(doc.reference);
+    }
+
+    // 2) Remove the user from participants
+    batch.update(conversationRef, {
+      'participants': FieldValue.arrayRemove([userId]),
+    });
+
+    // (Optional) If after removal the conversation has zero participants,
+    // you could delete the entire conversation doc:
+    final convSnapshot = await conversationRef.get();
+    final data = convSnapshot.data();
+    if (data != null) {
+      final participants = data['participants'] as List<dynamic>? ?? [];
+      if (participants.isEmpty) {
+        batch.delete(conversationRef);
+      }
+    }
+
+    await batch.commit();
+  }
 }

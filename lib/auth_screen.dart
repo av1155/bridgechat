@@ -16,6 +16,7 @@ class _AuthScreenState extends State<AuthScreen> {
   String _email = '';
   String _password = '';
   String _username = '';
+  String _preferredLanguage = 'English';
   bool _isSignUp = false;
 
   @override
@@ -35,7 +36,12 @@ class _AuthScreenState extends State<AuthScreen> {
       _formKey.currentState!.save();
       try {
         if (_isSignUp) {
-          await _authService.signUp(_email, _password, _username);
+          await _authService.signUp(
+            _email,
+            _password,
+            _username,
+            _preferredLanguage,
+          );
         } else {
           await _authService.signIn(_email, _password);
         }
@@ -52,14 +58,12 @@ class _AuthScreenState extends State<AuthScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Responsive logic
     final Size screenSize = MediaQuery.of(context).size;
     final bool isMobile = screenSize.width < 600;
 
     return Scaffold(
       appBar: AppBar(title: Text(_isSignUp ? 'Sign Up' : 'Sign In')),
       body: Center(
-        // Constrain width to avoid stretching on desktop
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 600),
           child: SingleChildScrollView(
@@ -121,6 +125,39 @@ class _AuthScreenState extends State<AuthScreen> {
                                   : null,
                     ),
                   ),
+                  if (_isSignUp) ...[
+                    const SizedBox(height: 20),
+                    // NEW: Dropdown to select preferred language
+                    Row(
+                      children: [
+                        const Text('Preferred Language: '),
+                        const SizedBox(width: 10),
+                        DropdownButton<String>(
+                          value: _preferredLanguage,
+                          items: const [
+                            DropdownMenuItem(
+                              value: 'English',
+                              child: Text('English'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'Spanish',
+                              child: Text('Spanish'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'French',
+                              child: Text('French'),
+                            ),
+                            // Add more languages as needed...
+                          ],
+                          onChanged: (val) {
+                            setState(() {
+                              _preferredLanguage = val ?? 'English';
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
                   const SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: _submit,

@@ -6,7 +6,6 @@ import 'message_bubble.dart';
 
 class ChatScreen extends StatefulWidget {
   final String conversationId;
-  // We'll also accept the other user's username here (see step 4).
   final String otherUserName;
 
   const ChatScreen({
@@ -26,6 +25,11 @@ class ChatScreenState extends State<ChatScreen> {
 
   final User? _currentUser = FirebaseAuth.instance.currentUser;
 
+  @override
+  void initState() {
+    super.initState();
+  }
+
   Future<void> _sendMessage() async {
     if (_messageController.text.trim().isNotEmpty && _currentUser != null) {
       await _chatService.sendMessage(
@@ -39,18 +43,11 @@ class ChatScreenState extends State<ChatScreen> {
   }
 
   void _scrollToBottom() {
-    // Safely call once UI is built
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
         _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
       }
     });
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    // Optionally listen to text field changes or do other setup
   }
 
   @override
@@ -65,14 +62,13 @@ class ChatScreenState extends State<ChatScreen> {
     final bool isMobile = screenSize.width < 600;
 
     return Scaffold(
-      // 3) Wrap in a SafeArea to avoid home bar overlap on iPhone
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 700),
             child: Column(
               children: [
-                // Custom AppBar row, or you can keep using AppBar if you prefer
+                // Top "AppBar" row
                 _buildHeader(isMobile),
                 Expanded(
                   child: StreamBuilder<QuerySnapshot>(
@@ -87,7 +83,7 @@ class ChatScreenState extends State<ChatScreen> {
 
                       final messages = snapshot.data!.docs;
 
-                      // Once data is loaded, scroll to bottom
+                      // Scroll to bottom once the messages load
                       WidgetsBinding.instance.addPostFrameCallback((_) {
                         _scrollToBottom();
                       });
@@ -120,7 +116,6 @@ class ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  // Example custom header so we can show "otherUserName" as the title
   Widget _buildHeader(bool isMobile) {
     return Container(
       color: Theme.of(context).scaffoldBackgroundColor,
@@ -148,19 +143,17 @@ class ChatScreenState extends State<ChatScreen> {
 
   Widget _buildMessageInput(bool isMobile) {
     return Padding(
-      // Add some extra bottom padding to avoid iPhone home bar overlap
-      padding: EdgeInsets.only(
-        left: 8.0,
-        right: 8.0,
-        bottom: 8.0,
-        // Additional spacing if you want to cushion from bottom edge
-      ),
+      padding: const EdgeInsets.only(left: 8.0, right: 8.0, bottom: 8.0),
       child: Row(
         children: [
           Expanded(
             child: TextField(
               controller: _messageController,
-              style: TextStyle(fontSize: isMobile ? 14 : 16),
+              // Multi-line input:
+              keyboardType: TextInputType.multiline,
+              textInputAction: TextInputAction.newline,
+              minLines: 1,
+              maxLines: 5, // The TextField will grow up to 5 lines
               decoration: const InputDecoration(labelText: 'Enter message'),
             ),
           ),

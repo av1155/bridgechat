@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'chat_screen.dart';
+import 'chat_service.dart';
 
 class RecentConversationsScreen extends StatelessWidget {
   RecentConversationsScreen({super.key});
 
   final User currentUser = FirebaseAuth.instance.currentUser!;
+  final ChatService _chatService = ChatService();
 
   Stream<QuerySnapshot> getRecentConversations() {
     return FirebaseFirestore.instance
@@ -24,9 +26,47 @@ class RecentConversationsScreen extends StatelessWidget {
     }
   }
 
+  // NEW: Show a confirmation dialog for deleting the conversation
+  void _confirmDeleteConversation(
+    BuildContext context,
+    String conversationId,
+  ) async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('Delete Conversation'),
+            content: const Text(
+              'Are you sure you want to delete this conversation for yourself? '
+              'All your messages will be removed. This cannot be undone.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('Delete'),
+              ),
+            ],
+          ),
+    );
+
+    if (shouldDelete == true) {
+      // Call our chat service to delete conversation for the current user
+      await _chatService.deleteConversationForUser(
+        conversationId,
+        currentUser.uid,
+      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Conversation deleted.')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Responsive logic
     final Size screenSize = MediaQuery.of(context).size;
     final bool isMobile = screenSize.width < 600;
 
@@ -41,6 +81,13 @@ class RecentConversationsScreen extends StatelessWidget {
             icon: const Icon(Icons.add),
             onPressed: () {
               Navigator.pushNamed(context, '/newConversation');
+            },
+          ),
+          // 3) NEW: The settings cog icon
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              Navigator.pushNamed(context, '/settings');
             },
           ),
         ],
@@ -69,11 +116,11 @@ class RecentConversationsScreen extends StatelessWidget {
               return ListView.builder(
                 itemCount: convos.length,
                 itemBuilder: (context, index) {
-                  final data = convos[index].data() as Map<String, dynamic>;
+                  final convRef = convos[index];
+                  final data = convRef.data() as Map<String, dynamic>;
                   final participants = data['participants'] as List<dynamic>;
                   final otherUserId = _getOtherUserId(participants);
 
-                  // FutureBuilder to fetch other user's username
                   return FutureBuilder<DocumentSnapshot>(
                     future:
                         FirebaseFirestore.instance
@@ -102,7 +149,7 @@ class RecentConversationsScreen extends StatelessWidget {
                                   Theme.of(context).colorScheme.secondary,
                               child: Text(
                                 displayName.isNotEmpty
-                                    ? displayName.substring(0, 1).toUpperCase()
+                                    ? displayName[0].toUpperCase()
                                     : '?',
                                 style: Theme.of(context).textTheme.titleLarge
                                     ?.copyWith(color: Colors.white),
@@ -122,12 +169,30 @@ class RecentConversationsScreen extends StatelessWidget {
                                 MaterialPageRoute(
                                   builder:
                                       (context) => ChatScreen(
-                                        conversationId: convos[index].id,
+                                        conversationId: convRef.id,
                                         otherUserName: displayName,
                                       ),
                                 ),
                               );
                             },
+                            // NEW: The 3-dot icon for conversation actions
+                            trailing: PopupMenuButton<String>(
+                              onSelected: (value) {
+                                if (value == 'delete') {
+                                  _confirmDeleteConversation(
+                                    context,
+                                    convRef.id,
+                                  );
+                                }
+                              },
+                              itemBuilder:
+                                  (ctx) => [
+                                    const PopupMenuItem(
+                                      value: 'delete',
+                                      child: Text('Delete Conversation'),
+                                    ),
+                                  ],
+                            ),
                           ),
                         ),
                       );
