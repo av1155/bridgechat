@@ -5,11 +5,12 @@ import 'chat_service.dart';
 import 'chat_screen.dart';
 
 class ConversationSelection extends StatelessWidget {
+  ConversationSelection({Key? key}) : super(key: key);
+
   final User currentUser = FirebaseAuth.instance.currentUser!;
   final ChatService _chatService = ChatService();
 
-  // For demonstration, we query the 'users' collection.
-  // In your implementation, make sure each user document includes a 'username' field.
+  // For demonstration, we query the 'users' collection
   Stream<QuerySnapshot> getUsers() {
     return FirebaseFirestore.instance.collection('users').snapshots();
   }
@@ -18,12 +19,10 @@ class ConversationSelection extends StatelessWidget {
     BuildContext context,
     String otherUserId,
   ) async {
-    // Create or get an existing conversation.
     String conversationId = await _chatService.createOrGetConversation(
       currentUser.uid,
       otherUserId,
     );
-    // Navigate to the chat screen with the conversation ID.
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -34,29 +33,50 @@ class ConversationSelection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Responsive logic
+    final Size screenSize = MediaQuery.of(context).size;
+    final bool isMobile = screenSize.width < 600;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Select a User')),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: getUsers(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData)
-            return const Center(child: CircularProgressIndicator());
-          final users = snapshot.data!.docs;
-          return ListView.builder(
-            itemCount: users.length,
-            itemBuilder: (context, index) {
-              final data = users[index].data() as Map<String, dynamic>;
-              final userId = users[index].id;
-              // Exclude the current user from the list.
-              if (userId == currentUser.uid) return const SizedBox.shrink();
-              final username = data['username'] ?? 'No Name';
-              return ListTile(
-                title: Text(username),
-                onTap: () => _startConversation(context, userId),
+      appBar: AppBar(
+        title: Text(
+          'Select a User',
+          style: TextStyle(fontSize: isMobile ? 18 : 20),
+        ),
+      ),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 700),
+          child: StreamBuilder<QuerySnapshot>(
+            stream: getUsers(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              final users = snapshot.data!.docs;
+              if (users.isEmpty) {
+                return const Center(child: Text('No users found.'));
+              }
+              return ListView.builder(
+                itemCount: users.length,
+                itemBuilder: (context, index) {
+                  final data = users[index].data() as Map<String, dynamic>;
+                  final userId = users[index].id;
+                  if (userId == currentUser.uid) return const SizedBox.shrink();
+                  final username = data['username'] ?? 'No Name';
+
+                  return ListTile(
+                    title: Text(
+                      username,
+                      style: TextStyle(fontSize: isMobile ? 14 : 16),
+                    ),
+                    onTap: () => _startConversation(context, userId),
+                  );
+                },
               );
             },
-          );
-        },
+          ),
+        ),
       ),
     );
   }

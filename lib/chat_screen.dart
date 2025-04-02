@@ -18,13 +18,12 @@ class ChatScreenState extends State<ChatScreen> {
   final User? _currentUser = FirebaseAuth.instance.currentUser;
 
   Future<void> _sendMessage() async {
-    // Assign a non-nullable local variable after checking.
     if (_messageController.text.trim().isNotEmpty && _currentUser != null) {
-      final user = _currentUser; // user is non-null here.
+      final user = _currentUser;
       await _chatService.sendMessage(
         widget.conversationId,
         _messageController.text.trim(),
-        user.uid,
+        user!.uid,
       );
       _messageController.clear();
     }
@@ -38,60 +37,78 @@ class ChatScreenState extends State<ChatScreen> {
         body: const Center(child: Text('User not authenticated.')),
       );
     }
-    // Since _currentUser is non-null here, we can safely assign it.
-    final user = _currentUser;
+
+    // Responsive logic
+    final Size screenSize = MediaQuery.of(context).size;
+    final bool isMobile = screenSize.width < 600;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Chat')),
-      body: Column(
-        children: [
-          Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: _chatService.getMessages(widget.conversationId),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return const Center(child: Text('No messages yet.'));
-                }
-                final messages = snapshot.data!.docs;
-                return ListView.builder(
-                  itemCount: messages.length,
-                  itemBuilder: (context, index) {
-                    final data = messages[index].data() as Map<String, dynamic>;
-                    final text = data['text'] ?? '';
-                    final senderId = data['senderId'] ?? 'Unknown';
-                    return MessageBubble(
-                      text: text,
-                      senderId: senderId,
-                      currentUserId: user.uid,
+      appBar: AppBar(
+        title: Text('Chat', style: TextStyle(fontSize: isMobile ? 18 : 20)),
+      ),
+      body: Center(
+        child: ConstrainedBox(
+          // Limit width on bigger screens so text isn’t super wide
+          constraints: const BoxConstraints(maxWidth: 700),
+          child: Column(
+            children: [
+              // Expanded area for messages
+              Expanded(
+                child: StreamBuilder<QuerySnapshot>(
+                  stream: _chatService.getMessages(widget.conversationId),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                      return const Center(child: Text('No messages yet.'));
+                    }
+                    final messages = snapshot.data!.docs;
+                    return ListView.builder(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      itemCount: messages.length,
+                      itemBuilder: (context, index) {
+                        final data =
+                            messages[index].data() as Map<String, dynamic>;
+                        final text = data['text'] ?? '';
+                        final senderId = data['senderId'] ?? 'Unknown';
+                        return MessageBubble(
+                          text: text,
+                          senderId: senderId,
+                          currentUserId: _currentUser!.uid,
+                        );
+                      },
                     );
                   },
-                );
-              },
-            ),
-          ),
-          const Divider(height: 1),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _messageController,
-                    decoration: const InputDecoration(
-                      labelText: 'Enter message',
+                ),
+              ),
+              const Divider(height: 1),
+              // Input row at bottom
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  children: [
+                    // Text field
+                    Expanded(
+                      child: TextField(
+                        controller: _messageController,
+                        style: TextStyle(fontSize: isMobile ? 14 : 16),
+                        decoration: const InputDecoration(
+                          labelText: 'Enter message',
+                        ),
+                      ),
                     ),
-                  ),
+                    // Send button
+                    IconButton(
+                      icon: Icon(Icons.send, size: isMobile ? 20 : 24),
+                      onPressed: _sendMessage,
+                    ),
+                  ],
                 ),
-                IconButton(
-                  icon: const Icon(Icons.send),
-                  onPressed: _sendMessage,
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

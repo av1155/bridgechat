@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'auth_service.dart';
 
 class AuthScreen extends StatefulWidget {
-  const AuthScreen({super.key});
+  final bool isSignUp;
+
+  const AuthScreen({Key? key, this.isSignUp = false}) : super(key: key);
 
   @override
   State<AuthScreen> createState() => _AuthScreenState();
@@ -13,8 +15,14 @@ class _AuthScreenState extends State<AuthScreen> {
   final _formKey = GlobalKey<FormState>();
   String _email = '';
   String _password = '';
-  String _username = ''; // Variable for username.
+  String _username = '';
   bool _isSignUp = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _isSignUp = widget.isSignUp;
+  }
 
   void _toggleForm() {
     setState(() {
@@ -44,75 +52,101 @@ class _AuthScreenState extends State<AuthScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Responsive logic
+    final Size screenSize = MediaQuery.of(context).size;
+    final bool isMobile = screenSize.width < 600;
+
     return Scaffold(
       appBar: AppBar(title: Text(_isSignUp ? 'Sign Up' : 'Sign In')),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              if (_isSignUp)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: TextFormField(
-                    decoration: const InputDecoration(
-                      labelText: 'Username',
-                      prefixIcon: Icon(Icons.person),
+      body: Center(
+        // Constrain width to avoid stretching on desktop
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 600),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                children: [
+                  if (_isSignUp)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: TextFormField(
+                        style: TextStyle(fontSize: isMobile ? 14 : 16),
+                        decoration: InputDecoration(
+                          labelText: 'Username',
+                          prefixIcon: const Icon(Icons.person),
+                          labelStyle: TextStyle(fontSize: isMobile ? 14 : 16),
+                        ),
+                        onSaved: (value) => _username = value!.trim(),
+                        validator:
+                            (value) =>
+                                (value == null || value.isEmpty)
+                                    ? 'Enter a username'
+                                    : null,
+                      ),
                     ),
-                    onSaved: (value) => _username = value!.trim(),
-                    validator:
-                        (value) =>
-                            value == null || value.isEmpty
-                                ? 'Enter a username'
-                                : null,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: TextFormField(
+                      style: TextStyle(fontSize: isMobile ? 14 : 16),
+                      decoration: InputDecoration(
+                        labelText: 'Email',
+                        prefixIcon: const Icon(Icons.email),
+                        labelStyle: TextStyle(fontSize: isMobile ? 14 : 16),
+                      ),
+                      onSaved: (value) => _email = value!.trim(),
+                      validator:
+                          (value) =>
+                              (value == null || value.isEmpty)
+                                  ? 'Enter an email'
+                                  : null,
+                    ),
                   ),
-                ),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: TextFormField(
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    prefixIcon: Icon(Icons.email),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: TextFormField(
+                      style: TextStyle(fontSize: isMobile ? 14 : 16),
+                      decoration: InputDecoration(
+                        labelText: 'Password',
+                        prefixIcon: const Icon(Icons.lock),
+                        labelStyle: TextStyle(fontSize: isMobile ? 14 : 16),
+                      ),
+                      obscureText: true,
+                      onSaved: (value) => _password = value!.trim(),
+                      validator:
+                          (value) =>
+                              (value != null && value.length < 6)
+                                  ? 'Password too short'
+                                  : null,
+                    ),
                   ),
-                  onSaved: (value) => _email = value!.trim(),
-                  validator:
-                      (value) =>
-                          value == null || value.isEmpty
-                              ? 'Enter an email'
-                              : null,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: TextFormField(
-                  decoration: const InputDecoration(
-                    labelText: 'Password',
-                    prefixIcon: Icon(Icons.lock),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: _submit,
+                    style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isMobile ? 20 : 30,
+                        vertical: isMobile ? 12 : 16,
+                      ),
+                    ),
+                    child: Text(
+                      _isSignUp ? 'Sign Up' : 'Sign In',
+                      style: TextStyle(fontSize: isMobile ? 14 : 16),
+                    ),
                   ),
-                  obscureText: true,
-                  onSaved: (value) => _password = value!.trim(),
-                  validator:
-                      (value) =>
-                          value != null && value.length < 6
-                              ? 'Password too short'
-                              : null,
-                ),
+                  TextButton(
+                    onPressed: _toggleForm,
+                    child: Text(
+                      _isSignUp
+                          ? 'Already have an account? Sign In'
+                          : 'Don’t have an account? Sign Up',
+                      style: TextStyle(fontSize: isMobile ? 14 : 16),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _submit,
-                child: Text(_isSignUp ? 'Sign Up' : 'Sign In'),
-              ),
-              TextButton(
-                onPressed: _toggleForm,
-                child: Text(
-                  _isSignUp
-                      ? 'Already have an account? Sign In'
-                      : 'Don’t have an account? Sign Up',
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),
