@@ -14,23 +14,25 @@
     - [License](#license)
     - [Changelog](#changelog)
     - [Contact](#contact)
-        <!--toc:end-->
+          <!--toc:end-->
 
 BridgeChat is a real-time chat application designed to break language barriers by integrating real-time translation. It offers seamless communication for users across different languages and platforms—starting with a web interface and expanding to mobile and desktop.
 
 ## Features
 
 - **Real-Time Messaging:** Fast, reliable message delivery with instant updates.
-- **Automatic Translation:** On-the-fly translation of messages based on user-selected languages.
+- **Group Chats:** Start conversations with multiple users, auto-generate group names, and customize group settings with group names and participant lists.
+- **Automatic Translation:** Messages are translated on-the-fly into each participant’s preferred language in both individual and group chats.
 - **User Privacy:** Secure, username-based registration without the need for phone numbers.
 - **Scalability:** Built using Flutter and Firebase for cross-platform support (web, mobile, desktop).
+- **Polished UI:** Gradient backgrounds, responsive layouts, message timestamps, and day-grouped messages for a modern chat experience.
 
 ## Tech Stack
 
 - **Front-End:** Flutter (for Web, Mobile, and Desktop)
 - **Back-End:** Firebase (Authentication, Firestore/Realtime Database, Cloud Functions, Hosting)
 - **Real-Time Communication:** Firebase’s real-time updates
-- **Translation Integration:** External translation APIs via Cloud Functions
+- **Translation Integration:** External translation via Self-Hosted Libretranslate calls.
 
 ## Getting Started
 
@@ -65,9 +67,12 @@ BridgeChat is a real-time chat application designed to break language barriers b
 - Update your Firebase configuration (e.g., `firebase_options.dart`) with your project details.
 
 5. **Run the app:**
+
     ```bash
     flutter run
     ```
+
+    > 💡 Tip: For web builds, you can use `flutter run -d chrome` or `flutter build web` to test and deploy.
 
 ## 🔐 Local Secrets Setup
 
