@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'utils/languages.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({Key? key}) : super(key: key);
@@ -79,20 +80,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             const SizedBox(width: 10),
                             DropdownButton<String>(
                               value: _preferredLanguage,
-                              items: const [
-                                DropdownMenuItem(
-                                  value: 'English',
-                                  child: Text('English'),
-                                ),
-                                DropdownMenuItem(
-                                  value: 'Spanish',
-                                  child: Text('Spanish'),
-                                ),
-                                DropdownMenuItem(
-                                  value: 'French',
-                                  child: Text('French'),
-                                ),
-                              ],
+                              items:
+                                  supportedLanguages.keys.map((langName) {
+                                    return DropdownMenuItem(
+                                      value: langName,
+                                      child: Text(langName),
+                                    );
+                                  }).toList(),
                               onChanged: (val) {
                                 setState(() {
                                   _preferredLanguage = val ?? 'English';

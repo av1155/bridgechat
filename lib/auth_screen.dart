@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'auth_service.dart';
+import 'utils/languages.dart';
 
 class AuthScreen extends StatefulWidget {
   final bool isSignUp;
@@ -134,21 +135,13 @@ class _AuthScreenState extends State<AuthScreen> {
                         const SizedBox(width: 10),
                         DropdownButton<String>(
                           value: _preferredLanguage,
-                          items: const [
-                            DropdownMenuItem(
-                              value: 'English',
-                              child: Text('English'),
-                            ),
-                            DropdownMenuItem(
-                              value: 'Spanish',
-                              child: Text('Spanish'),
-                            ),
-                            DropdownMenuItem(
-                              value: 'French',
-                              child: Text('French'),
-                            ),
-                            // Add more languages as needed...
-                          ],
+                          items:
+                              supportedLanguages.keys.map((langName) {
+                                return DropdownMenuItem(
+                                  value: langName,
+                                  child: Text(langName),
+                                );
+                              }).toList(),
                           onChanged: (val) {
                             setState(() {
                               _preferredLanguage = val ?? 'English';

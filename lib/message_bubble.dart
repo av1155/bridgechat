@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'utils/languages.dart';
 
 class MessageBubble extends StatefulWidget {
   final String senderId;
@@ -7,6 +8,8 @@ class MessageBubble extends StatefulWidget {
   final String originalText;
   final String translatedText;
   final DateTime timestamp;
+  final String? sourceLang;
+  final String? targetLang;
 
   const MessageBubble({
     Key? key,
@@ -15,6 +18,8 @@ class MessageBubble extends StatefulWidget {
     required this.originalText,
     required this.translatedText,
     required this.timestamp,
+    this.sourceLang,
+    this.targetLang,
   }) : super(key: key);
 
   @override
@@ -89,6 +94,24 @@ class _MessageBubbleState extends State<MessageBubble> {
                 ),
                 textAlign: isMe ? TextAlign.right : TextAlign.left,
               ),
+
+              if (hasDifferentTranslation &&
+                  widget.sourceLang != null &&
+                  widget.targetLang != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Text(
+                    'Translated from ${_getLangName(widget.sourceLang)} to ${_getLangName(widget.targetLang)}',
+
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontStyle: FontStyle.italic,
+                      color: isMe ? Colors.white70 : Colors.black54,
+                    ),
+                    textAlign: isMe ? TextAlign.right : TextAlign.left,
+                  ),
+                ),
+
               // Show a toggle only if there's a different translation
               if (hasDifferentTranslation)
                 Align(
@@ -113,4 +136,14 @@ class _MessageBubbleState extends State<MessageBubble> {
       ),
     );
   }
+}
+
+String _getLangName(String? code) {
+  if (code == null) return '';
+  return supportedLanguages.entries
+      .firstWhere(
+        (entry) => entry.value == code,
+        orElse: () => const MapEntry('Unknown', ''),
+      )
+      .key;
 }

@@ -6,6 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
+import 'utils/languages.dart';
 import 'secrets.dart';
 
 import 'message_bubble.dart';
@@ -24,12 +25,9 @@ class ChatScreen extends StatefulWidget {
   ChatScreenState createState() => ChatScreenState();
 }
 
-class ChatScreenState extends State<ChatScreen> {
+class ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-
-  // If you got rid of all checks for `_currentUser` being null,
-  // you can just store it safely:
   final User _currentUser = FirebaseAuth.instance.currentUser!;
 
   bool _autoScrollAllowed = true;
@@ -39,22 +37,37 @@ class ChatScreenState extends State<ChatScreen> {
   String? _otherUserId;
   String _otherUserLanguage = 'English';
   String _myLanguage = 'English';
-
   List<Map<String, dynamic>> _msgList = [];
+
+  bool _isInitialLoad = true;
+  bool _shouldShowLoading = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _scrollController.addListener(_onScroll);
-    _fetchParticipantsAndLanguages();
+    _fetchParticipantsAndLanguages().then((_) {
+      if (mounted)
+        setState(() {
+          _isInitialLoad = false;
+        });
+    });
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _scrollDebounce?.cancel();
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeMetrics() {
+    // Keyboard opened or closed
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
   }
 
   Future<void> _fetchParticipantsAndLanguages() async {
@@ -79,7 +92,6 @@ class ChatScreenState extends State<ChatScreen> {
     }
     if (_otherUserId == null) return;
 
-    // Load the other user’s language
     final otherDoc =
         await FirebaseFirestore.instance
             .collection('users')
@@ -90,14 +102,11 @@ class ChatScreenState extends State<ChatScreen> {
           (otherDoc.data()?['preferredLanguage'] ?? 'English') as String;
     }
 
-    // Load my language
     final myDoc =
         await FirebaseFirestore.instance.collection('users').doc(myUid).get();
     if (myDoc.exists) {
       _myLanguage = (myDoc.data()?['preferredLanguage'] ?? 'English') as String;
     }
-
-    setState(() {});
   }
 
   void _onScroll() {
@@ -135,13 +144,31 @@ class ChatScreenState extends State<ChatScreen> {
     final text = _messageController.text.trim();
     if (text.isEmpty) return;
     _messageController.clear();
+    _autoScrollAllowed = true;
 
-    _autoScrollAllowed =
-        true; // re-allow auto-scroll, since I’m sending a message
+    final myUid = _currentUser.uid;
 
-    // Original vs. translated
-    String originalText = text;
+    final myDoc =
+        await FirebaseFirestore.instance.collection('users').doc(myUid).get();
+    if (myDoc.exists) {
+      _myLanguage = (myDoc.data()?['preferredLanguage'] ?? 'English') as String;
+    }
+
+    if (_otherUserId != null) {
+      final otherDoc =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(_otherUserId!)
+              .get();
+      if (otherDoc.exists) {
+        _otherUserLanguage =
+            (otherDoc.data()?['preferredLanguage'] ?? 'English') as String;
+      }
+    }
+
+    final originalText = text;
     String translatedText = text;
+
     if (_myLanguage.toLowerCase() != _otherUserLanguage.toLowerCase()) {
       translatedText = await _translateText(
         text,
@@ -159,9 +186,10 @@ class ChatScreenState extends State<ChatScreen> {
           'originalText': originalText,
           'translatedText': translatedText,
           'timestamp': FieldValue.serverTimestamp(),
+          'sourceLang': _langToIso(_myLanguage),
+          'targetLang': _langToIso(_otherUserLanguage),
         });
 
-    // Update conversation
     await FirebaseFirestore.instance
         .collection('conversations')
         .doc(widget.conversationId)
@@ -195,77 +223,72 @@ class ChatScreenState extends State<ChatScreen> {
     } catch (e) {
       debugPrint('Translation error: $e');
     }
-    return text; // fallback
+    return text;
   }
 
   String _langToIso(String lang) {
-    switch (lang.toLowerCase()) {
-      case 'english':
-        return 'en';
-      case 'spanish':
-        return 'es';
-      case 'french':
-        return 'fr';
-    }
-    return 'en';
+    return supportedLanguages[lang] ?? 'en';
   }
 
   void _scrollToBottom() {
     if (!_autoScrollAllowed) return;
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
-        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_currentUser == null) {
-      return const Scaffold(body: Center(child: Text('Not authenticated.')));
-    }
-
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(),
-            Expanded(
-              child: Stack(
-                children: [
-                  _buildMessagesStream(),
-                  if (_pinnedDayString.isNotEmpty)
-                    Positioned(
-                      top: 16,
-                      left: 0,
-                      right: 0,
-                      child: Center(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 4,
-                            horizontal: 12,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade300,
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Text(
-                            _pinnedDayString,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.black87,
+        child:
+            _isInitialLoad
+                ? const Center(child: CircularProgressIndicator())
+                : Column(
+                  children: [
+                    _buildHeader(),
+                    Expanded(
+                      child: Stack(
+                        children: [
+                          _buildMessagesStream(),
+                          if (_pinnedDayString.isNotEmpty)
+                            Positioned(
+                              top: 16,
+                              left: 0,
+                              right: 0,
+                              child: Center(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 4,
+                                    horizontal: 12,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade300,
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Text(
+                                    _pinnedDayString,
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
+                        ],
                       ),
                     ),
-                ],
-              ),
-            ),
-            _buildMessageInput(),
-          ],
-        ),
+                    _buildMessageInput(),
+                  ],
+                ),
       ),
     );
   }
@@ -303,7 +326,7 @@ class ChatScreenState extends State<ChatScreen> {
               .snapshots(),
       builder: (ctx, snap) {
         if (snap.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return const SizedBox();
         }
         final docs = snap.data?.docs ?? [];
         if (docs.isEmpty) {
@@ -323,10 +346,11 @@ class ChatScreenState extends State<ChatScreen> {
                 'originalText': originalText,
                 'translatedText': translatedText,
                 'timestamp': dt,
+                'sourceLang': data['sourceLang'] ?? 'en',
+                'targetLang': data['targetLang'] ?? 'en',
               };
             }).toList();
 
-        // After building list, auto-scroll if allowed
         WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
 
         return ListView.builder(
@@ -354,12 +378,17 @@ class ChatScreenState extends State<ChatScreen> {
               }
             }
 
+            final sourceLang = msg['sourceLang'] as String?;
+            final targetLang = msg['targetLang'] as String?;
+
             final bubble = MessageBubble(
               senderId: senderId,
               currentUserId: _currentUser.uid,
               originalText: originalText,
               translatedText: translatedText,
               timestamp: dt,
+              sourceLang: sourceLang,
+              targetLang: targetLang,
             );
 
             if (dayMarker != null) {
@@ -377,8 +406,8 @@ class ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _buildMessageInput() {
-    return Container(
-      padding: const EdgeInsets.only(left: 8, right: 8, bottom: 8),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
       child: Row(
         children: [
           Expanded(
@@ -387,6 +416,7 @@ class ChatScreenState extends State<ChatScreen> {
               minLines: 1,
               maxLines: 5,
               decoration: const InputDecoration(labelText: 'Enter message'),
+              onTap: _scrollToBottom,
             ),
           ),
           IconButton(icon: const Icon(Icons.send), onPressed: _sendMessage),
