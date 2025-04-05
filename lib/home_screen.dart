@@ -29,7 +29,18 @@ class HomeScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const FlutterLogo(size: 100),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(
+                      24,
+                    ), // You can adjust the corner radius
+                    child: Image.asset(
+                      'assets/images/BridgeChat.png',
+                      width: isMobile ? 360 : 500,
+                      height: isMobile ? 210 : 300,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+
                   const SizedBox(height: 24),
                   Text(
                     'Welcome to BridgeChat',

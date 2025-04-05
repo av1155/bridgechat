@@ -96,7 +96,18 @@ class _AuthScreenState extends State<AuthScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const FlutterLogo(size: 72),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(
+                            24,
+                          ), // You can adjust the corner radius
+                          child: Image.asset(
+                            'assets/images/BridgeChat.png',
+                            width: isMobile ? 370 : 500,
+                            height: isMobile ? 210 : 250,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+
                         const SizedBox(height: 16),
                         Text(
                           _isSignUp ? 'Create an Account' : 'Welcome Back',
