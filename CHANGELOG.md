@@ -6,6 +6,22 @@ All notable changes to BridgeChat will be documented in this file.
 
 - Planned: Feature enhancements, performance optimizations, and additional platform support.
 
+## [0.1.2] - 2025-04-05
+
+### Added
+
+- BridgeChat logo added to README for branding.
+- Logo integrated into home and auth screens using `Image.asset` with rounded corners and enhanced sizing.
+- Registered image asset in `pubspec.yaml`.
+- Usage instructions added to `secrets_sample.dart` including:
+    - URL format and self-hosting options.
+    - Setup steps for local development.
+    - Guide for injecting secrets in GitHub Actions for Firebase deployment.
+
+### Changed
+
+- Auth screen logo size adjusted for smartphones to improve mobile scaling.
+
 ## [0.1.1] - 2025-04-02
 
 ### Added
