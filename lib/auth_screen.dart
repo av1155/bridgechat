@@ -102,8 +102,8 @@ class _AuthScreenState extends State<AuthScreen> {
                           ), // You can adjust the corner radius
                           child: Image.asset(
                             'assets/images/BridgeChat.png',
-                            width: isMobile ? 370 : 500,
-                            height: isMobile ? 210 : 250,
+                            width: isMobile ? 350 : 500,
+                            height: isMobile ? 190 : 250,
                             fit: BoxFit.cover,
                           ),
                         ),
