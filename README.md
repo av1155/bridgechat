@@ -1,5 +1,8 @@
 # BridgeChat
 
+<p align="left">
+  <img src="assets/images/BridgeChat.png" alt="BridgeChat Logo" width="350"/>
+</p>
 <!--toc:start-->
 
 - [BridgeChat](#bridgechat)
